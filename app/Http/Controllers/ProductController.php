@@ -32,7 +32,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product added successfully',
+            'message' => "Product '{$validated['product_name']}' has been added successfully",
             'product' => $newProduct,
         ]);
     }
@@ -74,7 +74,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated successfully',
+            'message' => "Product '{$validated['product_name']}' has been updated successfully",
         ]);
     }
 
@@ -84,13 +84,31 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $products = $this->getProducts();
-        $products = $this->removeProduct($products, $id);
         
+        // Find product name before deletion
+        $productName = null;
+        foreach ($products as $product) {
+            if ($product['id'] === $id) {
+                $productName = $product['product_name'];
+                break;
+            }
+        }
+        
+        // If product not found
+        if (!$productName) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+        
+        // Remove product
+        $products = $this->removeProduct($products, $id);
         $this->saveProducts($products);
 
         return response()->json([
             'success' => true,
-            'message' => 'Product deleted successfully',
+            'message' => "Product '{$productName}' has been deleted successfully",
         ]);
     }
 

@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     
     <style>
         * {
@@ -399,6 +401,79 @@
             padding: 20px 25px;
         }
         
+        /* SweetAlert2 Custom Styling */
+        .swal2-popup {
+            font-family: 'Georgia', serif;
+            border: 1px solid #d4d4d0;
+            border-radius: 2px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .swal2-title {
+            color: #2c2c2c;
+            font-size: 1.5rem;
+            font-weight: 400;
+            font-family: 'Georgia', serif;
+        }
+        
+        .swal2-html-container {
+            color: #6c6c6c;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .swal2-confirm {
+            background: #8b7355 !important;
+            border: 1px solid #7a6449 !important;
+            border-radius: 2px !important;
+            padding: 10px 30px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-family: 'Segoe UI', sans-serif !important;
+        }
+        
+        .swal2-confirm:hover {
+            background: #7a6449 !important;
+        }
+        
+        .swal2-cancel {
+            background: #6c6c6c !important;
+            border: 1px solid #5c5c5c !important;
+            border-radius: 2px !important;
+            padding: 10px 30px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-family: 'Segoe UI', sans-serif !important;
+        }
+        
+        .swal2-cancel:hover {
+            background: #5c5c5c !important;
+        }
+        
+        .swal2-icon.swal2-success {
+            border-color: #6b8e6b !important;
+            color: #6b8e6b !important;
+        }
+        
+        .swal2-icon.swal2-success [class^='swal2-success-line'] {
+            background-color: #6b8e6b !important;
+        }
+        
+        .swal2-icon.swal2-success .swal2-success-ring {
+            border-color: rgba(107, 142, 107, 0.3) !important;
+        }
+        
+        .swal2-icon.swal2-error {
+            border-color: #a44a3f !important;
+            color: #a44a3f !important;
+        }
+        
+        .swal2-icon.swal2-warning {
+            border-color: #d4a574 !important;
+            color: #d4a574 !important;
+        }
+        
         @media (max-width: 768px) {
             .main-container {
                 padding: 30px 20px;
@@ -432,9 +507,6 @@
                 <h1><i class="bi bi-box-seam"></i> Product Inventory Management</h1>
                 <p>Manage your product inventory with ease</p>
             </div>
-
-            <!-- Alert Messages -->
-            <div id="alertContainer"></div>
 
             <!-- Form Section -->
             <div class="form-section">
@@ -514,6 +586,8 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         // CSRF Token Setup
@@ -530,25 +604,40 @@
             });
         });
 
-        // Show Alert
+        // Show Alert with SweetAlert2
         function showAlert(message, type = 'success') {
-            const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
-            document.getElementById('alertContainer').innerHTML = alertHtml;
+            const icons = {
+                'success': 'success',
+                'danger': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
             
-            // Auto dismiss after 5 seconds
-            setTimeout(() => {
-                const alert = document.querySelector('.alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(() => alert.remove(), 150);
+            const titles = {
+                'success': 'Success!',
+                'danger': 'Error!',
+                'warning': 'Warning!',
+                'info': 'Info'
+            };
+            
+            Swal.fire({
+                icon: icons[type] || 'info',
+                title: titles[type] || 'Notification',
+                text: message,
+                confirmButtonText: 'OK',
+                timer: 3000,
+                timerProgressBar: true,
+                showClass: {
+                    popup: 'swal2-show',
+                    backdrop: 'swal2-backdrop-show',
+                    icon: 'swal2-icon-show'
+                },
+                hideClass: {
+                    popup: 'swal2-hide',
+                    backdrop: 'swal2-backdrop-hide',
+                    icon: 'swal2-icon-hide'
                 }
-            }, 5000);
+            });
         }
 
         // Add Product
@@ -575,12 +664,12 @@
                     document.getElementById('productForm').reset();
                     loadProducts();
                 } else {
-                    showAlert('Error adding product', 'danger');
+                    showAlert(data.message || 'Failed to add product', 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Error adding product', 'danger');
+                showAlert('Failed to add product. Please check your input and try again.', 'danger');
             });
         }
 
@@ -601,7 +690,7 @@
                 console.error('Error:', error);
                 document.getElementById('tableContainer').innerHTML = `
                     <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle"></i> Error loading products
+                        <i class="bi bi-exclamation-triangle"></i> Failed to load products. Please refresh the page.
                     </div>
                 `;
             });
@@ -650,7 +739,7 @@
                             <button class="btn btn-warning btn-sm me-1" onclick="editProduct('${product.id}', '${escapeHtml(product.product_name)}', ${product.quantity}, ${product.price})" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')" title="Delete">
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}', '${escapeHtml(product.product_name)}')" title="Delete">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -709,40 +798,61 @@
                     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
                     loadProducts();
                 } else {
-                    showAlert('Error updating product', 'danger');
+                    showAlert(data.message || 'Failed to update product', 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Error updating product', 'danger');
+                showAlert('Failed to update product. Please check your input and try again.', 'danger');
             });
         }
 
-        // Delete Product
-        function deleteProduct(id) {
-            if (!confirm('Are you sure you want to delete this product?')) {
-                return;
-            }
+        // Delete Product with SweetAlert2
+        function deleteProduct(id, productName) {
+            Swal.fire({
+                title: 'Delete Product?',
+                html: `Are you sure you want to delete<br><strong>"${productName}"</strong>?<br><br><small>This action cannot be undone.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-            fetch(`/products/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
+                    fetch(`/products/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                            loadProducts();
+                        } else {
+                            showAlert(data.message || 'Error deleting product', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('Failed to delete product. Please try again.', 'danger');
+                    });
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    loadProducts();
-                } else {
-                    showAlert('Error deleting product', 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Error deleting product', 'danger');
             });
         }
 
